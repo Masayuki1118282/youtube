@@ -54,13 +54,6 @@ export default function DashboardTab({ channel }: Props) {
           <p className="text-xs text-[#aaaaaa] mb-2">2026年 累計収益</p>
           <p className="text-3xl font-semibold text-[#facc15]">¥{totalRevenue.toLocaleString("ja-JP")}</p>
         </div>
-        <div className="bg-[#202020] border border-[#303030] rounded-xl p-5">
-          <p className="text-xs text-[#aaaaaa] mb-2">直近月収益</p>
-          <p className="text-3xl font-semibold text-[#facc15]">
-            {latestRevenue ? `¥${latestRevenue.revenue.toLocaleString("ja-JP")}` : "未設定"}
-          </p>
-          {latestRevenue && <p className="text-xs text-[#717171] mt-1">2026年 {latestRevenue.month}月</p>}
-        </div>
       </div>
 
       {/* News/tips */}
