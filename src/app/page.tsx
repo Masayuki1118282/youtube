@@ -26,7 +26,7 @@ export default function LoginPage() {
 
   return (
     <div className="min-h-screen bg-[#0f0f0f] flex items-center justify-center p-4">
-      <div className="w-full max-w-[400px] bg-[#212121] rounded-xl p-10">
+      <div className="w-full md:max-w-[400px] bg-[#212121] rounded-xl p-6 md:p-10">
 
         {/* Logo */}
         <div className="flex flex-col items-center mb-8">
@@ -41,7 +41,6 @@ export default function LoginPage() {
 
         {/* Form */}
         <div className="flex flex-col gap-5">
-          {/* Email */}
           <div className="flex flex-col gap-1.5">
             <label className="text-xs text-[#aaaaaa] font-medium">メールアドレス</label>
             <input
@@ -53,7 +52,6 @@ export default function LoginPage() {
             />
           </div>
 
-          {/* Password */}
           <div className="flex flex-col gap-1.5">
             <label className="text-xs text-[#aaaaaa] font-medium">パスワード</label>
             <input
@@ -66,12 +64,8 @@ export default function LoginPage() {
             />
           </div>
 
-          {/* Error */}
-          {error && (
-            <p className="text-[#f28b82] text-xs">{error}</p>
-          )}
+          {error && <p className="text-[#f28b82] text-xs">{error}</p>}
 
-          {/* Sign in button */}
           <button
             onClick={handleLogin}
             disabled={loading || !email || !password}
@@ -80,12 +74,8 @@ export default function LoginPage() {
             {loading ? "サインイン中..." : "サインイン"}
           </button>
 
-          {/* Admin link */}
-          <div className="flex justify-end mt-1">
-            <a
-              href="/admin"
-              className="text-xs text-[#717171] hover:text-[#aaaaaa] transition-colors"
-            >
+          <div className="flex justify-end">
+            <a href="/admin" className="text-xs text-[#717171] hover:text-[#aaaaaa] transition-colors">
               管理者ログイン
             </a>
           </div>

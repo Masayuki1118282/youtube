@@ -106,8 +106,8 @@ export default function CustomerManager({ onToast }: Props) {
         </div>
       </div>
 
-      {/* Table */}
-      <div className="bg-[#202020] border border-[#303030] rounded-xl overflow-hidden">
+      {/* Table (tablet+) */}
+      <div className="hidden md:block bg-[#202020] border border-[#303030] rounded-xl overflow-hidden">
         {loading ? (
           <div className="flex justify-center py-8">
             <div className="w-5 h-5 border-2 border-[#FF0000] border-t-transparent rounded-full animate-spin" />
@@ -139,6 +139,30 @@ export default function CustomerManager({ onToast }: Props) {
               )}
             </tbody>
           </table>
+        )}
+      </div>
+
+      {/* Cards (mobile) */}
+      <div className="md:hidden flex flex-col gap-3">
+        {loading ? (
+          <div className="flex justify-center py-8">
+            <div className="w-5 h-5 border-2 border-[#FF0000] border-t-transparent rounded-full animate-spin" />
+          </div>
+        ) : customers.length === 0 ? (
+          <p className="text-center py-8 text-gray-600 text-sm">顧客がいません</p>
+        ) : (
+          customers.map((c) => (
+            <div key={c.id} className="bg-[#202020] border border-[#303030] rounded-xl p-4">
+              <div className="flex items-start justify-between gap-2">
+                <div className="min-w-0">
+                  <p className="text-white font-medium text-sm truncate">{c.name}</p>
+                  <p className="text-gray-400 text-xs mt-0.5 truncate">{c.email}</p>
+                  <p className="text-gray-500 text-xs mt-1">チャンネル数: {c.channelCount}</p>
+                </div>
+                <button onClick={() => handleDelete(c.id)} className="text-xs text-gray-500 hover:text-[#FF4444] transition-colors flex-shrink-0">削除</button>
+              </div>
+            </div>
+          ))
         )}
       </div>
     </div>

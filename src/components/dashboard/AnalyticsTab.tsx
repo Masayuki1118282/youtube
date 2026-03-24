@@ -78,9 +78,9 @@ export default function AnalyticsTab({ channel }: Props) {
   const [activeKpi, setActiveKpi] = useState(0);
 
   return (
-    <div className="flex h-full">
+    <div className="flex flex-col md:flex-row h-full">
       {/* Main content */}
-      <div className="flex-1 min-w-0 p-6 overflow-auto">
+      <div className="flex-1 min-w-0 p-4 md:p-6 overflow-auto">
         <h1 className="text-xl font-semibold text-white mb-4">チャンネルアナリティクス</h1>
 
         {/* Sub-tabs */}
@@ -120,7 +120,7 @@ export default function AnalyticsTab({ channel }: Props) {
             </div>
 
             {/* KPI cards */}
-            <div className="grid grid-cols-3 gap-3 mb-6">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-6">
               {kpis.map((kpi, i) => (
                 <button
                   key={i}
@@ -190,7 +190,7 @@ export default function AnalyticsTab({ channel }: Props) {
       </div>
 
       {/* Right panel */}
-      <div className="w-72 flex-shrink-0 border-l border-[#303030] p-4 overflow-auto">
+      <div className="w-full md:w-72 flex-shrink-0 border-t md:border-t-0 md:border-l border-[#303030] p-4 overflow-auto">
         {/* Realtime */}
         <div className="bg-[#202020] border border-[#303030] rounded-xl p-4 mb-3">
           <div className="flex items-center justify-between mb-3">
