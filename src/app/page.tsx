@@ -14,10 +14,8 @@ export default function LoginPage() {
     if (!email || !password) return;
     setLoading(true);
     setError("");
-
     const supabase = createClient();
     const { error } = await supabase.auth.signInWithPassword({ email, password });
-
     if (error) {
       setError("メールアドレスまたはパスワードが正しくありません");
       setLoading(false);
@@ -28,51 +26,69 @@ export default function LoginPage() {
 
   return (
     <div className="min-h-screen bg-[#0f0f0f] flex items-center justify-center p-4">
-      <div className="w-full max-w-md">
-        <div className="bg-[#202020] border border-[#303030] rounded-2xl p-8">
-          {/* Logo */}
-          <div className="flex items-center gap-3 mb-8 justify-center">
-            <div className="w-10 h-7 bg-[#FF0000] rounded-md flex items-center justify-center">
-              <span className="text-white text-sm font-bold">▶</span>
+      <div className="w-full max-w-[400px] bg-[#212121] rounded-xl p-10">
+
+        {/* Logo */}
+        <div className="flex flex-col items-center mb-8">
+          <div className="flex items-center gap-2 mb-5">
+            <div className="w-9 h-6 bg-[#FF0000] rounded-md flex items-center justify-center flex-shrink-0">
+              <span className="text-white text-xs font-bold leading-none">▶</span>
             </div>
-            <span className="text-white text-xl font-semibold tracking-tight">YouTube Studio</span>
+            <span className="text-white text-xl font-bold tracking-wide">Studio</span>
           </div>
+          <h1 className="text-white text-[20px] font-normal">アカウントにサインイン</h1>
+        </div>
 
-          <h2 className="text-center text-gray-400 text-sm mb-6">アカウントにサインイン</h2>
-
-          <div className="flex flex-col gap-4">
+        {/* Form */}
+        <div className="flex flex-col gap-5">
+          {/* Email */}
+          <div className="flex flex-col gap-1.5">
+            <label className="text-xs text-[#aaaaaa] font-medium">メールアドレス</label>
             <input
               type="email"
-              placeholder="メールアドレス"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="w-full bg-[#121212] border border-[#303030] rounded-lg px-4 py-3 text-white text-sm placeholder-gray-600 focus:outline-none focus:border-[#FF0000] transition-colors"
+              className="bg-[#121212] border border-[#303030] rounded-md px-4 py-3.5 text-sm text-white placeholder-[#555] focus:outline-none focus:border-[#3ea6ff] transition-colors"
+              placeholder="example@gmail.com"
             />
+          </div>
+
+          {/* Password */}
+          <div className="flex flex-col gap-1.5">
+            <label className="text-xs text-[#aaaaaa] font-medium">パスワード</label>
             <input
               type="password"
-              placeholder="パスワード"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && handleLogin()}
-              className="w-full bg-[#121212] border border-[#303030] rounded-lg px-4 py-3 text-white text-sm placeholder-gray-600 focus:outline-none focus:border-[#FF0000] transition-colors"
+              className="bg-[#121212] border border-[#303030] rounded-md px-4 py-3.5 text-sm text-white placeholder-[#555] focus:outline-none focus:border-[#3ea6ff] transition-colors"
+              placeholder="パスワードを入力"
             />
-
-            {error && <p className="text-[#FF4444] text-xs text-center">{error}</p>}
-
-            <button
-              onClick={handleLogin}
-              disabled={loading}
-              className="w-full bg-[#FF0000] hover:bg-[#cc0000] disabled:opacity-50 text-white font-medium py-3 rounded-lg transition-colors"
-            >
-              {loading ? "サインイン中..." : "サインイン"}
-            </button>
           </div>
-        </div>
 
-        <div className="mt-4 text-center">
-          <a href="/admin" className="text-[#555] hover:text-[#777] text-xs transition-colors">
-            管理者ログイン
-          </a>
+          {/* Error */}
+          {error && (
+            <p className="text-[#f28b82] text-xs">{error}</p>
+          )}
+
+          {/* Sign in button */}
+          <button
+            onClick={handleLogin}
+            disabled={loading || !email || !password}
+            className="w-full bg-[#3ea6ff] hover:bg-[#2d96ef] disabled:opacity-40 disabled:cursor-not-allowed text-black font-bold text-sm py-3 rounded-md transition-colors mt-1"
+          >
+            {loading ? "サインイン中..." : "サインイン"}
+          </button>
+
+          {/* Admin link */}
+          <div className="flex justify-end mt-1">
+            <a
+              href="/admin"
+              className="text-xs text-[#717171] hover:text-[#aaaaaa] transition-colors"
+            >
+              管理者ログイン
+            </a>
+          </div>
         </div>
       </div>
     </div>
