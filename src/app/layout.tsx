@@ -3,7 +3,10 @@ import "./globals.css";
 
 export const metadata: Metadata = {
   title: "YouTube Studio",
-  description: "チャンネルダッシュボード",
+  description: "YouTube Studio",
+  icons: {
+    icon: "https://www.youtube.com/favicon.ico",
+  },
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

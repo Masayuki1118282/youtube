@@ -1,36 +1,34 @@
-export type User = {
-  id: number;
-  email: string;
-  password: string;
+export type Profile = {
+  id: string;
   name: string;
-  channelId: number | null;
-};
-
-export type Video = {
-  id: number;
-  title: string;
-  views: number;
-  likes: number;
-  comments: number;
-  date: string;
-  thumbnail: string;
-  duration: string;
-  revenue: number;
+  email: string;
 };
 
 export type Channel = {
-  id: number;
-  name: string;
-  handle: string;
-  avatar: string;
-  avatarColor: string;
+  id: string;
+  user_id: string;
+  youtube_channel_id: string;
+  channel_name: string;
+  handle: string | null;
+  thumbnail_url: string | null;
   subscribers: number;
-  totalViews: number;
+  total_views: number;
+  monthly_revenue?: MonthlyRevenue[];
+};
+
+export type MonthlyRevenue = {
+  id: string;
+  channel_id: string;
+  year: number;
+  month: number;
   revenue: number;
-  joinDate: string;
-  videos: Video[];
-  analytics: {
-    daily: number[];
-    labels: string[];
-  };
+};
+
+export type YoutubeVideo = {
+  id: string;
+  title: string;
+  thumbnail: string;
+  publishedAt: string;
+  viewCount: number;
+  likeCount: number;
 };
