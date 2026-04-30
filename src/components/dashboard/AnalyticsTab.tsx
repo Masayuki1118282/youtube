@@ -2,29 +2,21 @@
 import { useState } from "react";
 import { Channel } from "@/types";
 import LineChart from "./LineChart";
+import { getAnalyticsForRange } from "@/lib/analytics";
 
 type Props = { channel: Channel };
 type SubTab = "overview" | "content" | "audience";
 
-// Deterministic pseudo-random based on seed
-function seededRand(seed: number, i: number): number {
-  const x = Math.sin(seed * 9301 + i * 49297 + 233) * 10000;
-  return x - Math.floor(x);
+function genRealtimeLabels(): string[] {
+  return Array.from({ length: 12 }, (_, i) => `${i * 4}h`);
 }
 
-function generateTrend(base: number, days: number, seed: number): number[] {
-  return Array.from({ length: days }, (_, i) => {
-    const trend = 1 + (i / days) * 0.15;
-    const noise = 0.75 + seededRand(seed, i) * 0.5;
-    return Math.max(1, Math.floor(base * trend * noise));
-  });
-}
-
-function genDateLabels(days: number): string[] {
-  return Array.from({ length: days }, (_, i) => {
-    const d = new Date();
-    d.setDate(d.getDate() - (days - 1 - i));
-    return `${d.getMonth() + 1}/${d.getDate()}`;
+function genRealtimeTrend(base: number, channelSeed: number): number[] {
+  // simple deterministic trend for the small realtime mini-chart
+  return Array.from({ length: 12 }, (_, i) => {
+    const x = Math.sin(channelSeed * 9301 + i * 49297 + 233) * 10000;
+    const noise = x - Math.floor(x);
+    return Math.max(1, Math.round(base * (0.6 + noise * 0.8)));
   });
 }
 
@@ -37,24 +29,16 @@ export default function AnalyticsTab({ channel }: Props) {
   const [subTab, setSubTab] = useState<SubTab>("overview");
   const [range, setRange] = useState(28);
 
-  const seed = channel.youtube_channel_id.split("").reduce((a, c) => a + c.charCodeAt(0), 0);
-  const dailyViews = Math.floor(channel.total_views / 365);
-  const viewData = generateTrend(dailyViews, range, seed);
-  const watchData = generateTrend(Math.floor(dailyViews * 3.5), range, seed + 1);
-  const subData = generateTrend(Math.floor(channel.subscribers / 100), range, seed + 2);
-  const labels = genDateLabels(range);
+  const data = getAnalyticsForRange(channel.youtube_channel_id, range);
+  const {
+    viewData, watchData, subData, labels,
+    totalViews, totalWatchHours,
+    viewGrowthPercent, watchGrowthPercent, subGrowthPercent,
+    currentSubscribers, realtimeViewers, lifetimeViews,
+  } = data;
 
-  const totalViews = viewData.reduce((a, b) => a + b, 0);
-  const totalWatch = watchData.reduce((a, b) => a + b, 0);
-  const prevViews = Math.floor(totalViews * (0.7 + seededRand(seed, 99) * 0.4));
-  const prevWatch = Math.floor(totalWatch * (0.7 + seededRand(seed, 98) * 0.4));
-  const prevSubs = Math.floor(channel.subscribers * (0.85 + seededRand(seed, 97) * 0.2));
-
-  const viewGrowth = Math.round(((totalViews - prevViews) / prevViews) * 100);
-  const watchGrowth = Math.round(((totalWatch - prevWatch) / prevWatch) * 100);
-  const subGrowth = Math.round(((channel.subscribers - prevSubs) / prevSubs) * 100);
-
-  const realtimeViewers = Math.floor(5 + seededRand(seed, 50) * 45);
+  const channelSeed = channel.youtube_channel_id
+    .split("").reduce((a, c) => a + c.charCodeAt(0), 0);
 
   const subTabs: { id: SubTab; label: string }[] = [
     { id: "overview", label: "概要" },
@@ -70,9 +54,9 @@ export default function AnalyticsTab({ channel }: Props) {
   ];
 
   const kpis = [
-    { label: "視聴回数", value: fmt(totalViews), growth: viewGrowth, data: viewData },
-    { label: "総再生時間（時間）", value: fmt(Math.floor(totalWatch / 60)), growth: watchGrowth, data: watchData },
-    { label: "チャンネル登録者", value: fmt(channel.subscribers), growth: subGrowth, data: subData },
+    { label: "視聴回数", value: fmt(totalViews), growth: Math.round(viewGrowthPercent), data: viewData },
+    { label: "総再生時間（時間）", value: fmt(totalWatchHours), growth: Math.round(watchGrowthPercent), data: watchData },
+    { label: "チャンネル登録者", value: fmt(currentSubscribers), growth: Math.round(subGrowthPercent), data: subData },
   ];
 
   const [activeKpi, setActiveKpi] = useState(0);
@@ -201,8 +185,8 @@ export default function AnalyticsTab({ channel }: Props) {
           <p className="text-xs text-[#aaaaaa]">過去48時間の視聴者数</p>
           <div className="mt-3">
             <LineChart
-              data={generateTrend(realtimeViewers, 12, seed + 5)}
-              labels={Array.from({ length: 12 }, (_, i) => `${i * 4}h`)}
+              data={genRealtimeTrend(realtimeViewers, channelSeed)}
+              labels={genRealtimeLabels()}
               color="#FF0000"
             />
           </div>
@@ -211,25 +195,25 @@ export default function AnalyticsTab({ channel }: Props) {
         {/* Subscribers */}
         <div className="bg-[#202020] border border-[#303030] rounded-xl p-4 mb-3">
           <p className="text-sm font-medium text-white mb-3">登録者数</p>
-          <p className="text-3xl font-semibold text-white mb-1">{fmt(channel.subscribers)}</p>
-          <div className="flex items-center gap-1 text-xs text-[#4ade80]">
-            <span>↑</span>
-            <span>{subGrowth}%</span>
+          <p className="text-3xl font-semibold text-white mb-1">{fmt(currentSubscribers)}</p>
+          <div className={`flex items-center gap-1 text-xs ${subGrowthPercent >= 0 ? "text-[#4ade80]" : "text-[#f87171]"}`}>
+            <span>{subGrowthPercent >= 0 ? "↑" : "↓"}</span>
+            <span>{Math.abs(Math.round(subGrowthPercent))}%</span>
             <span className="text-[#717171]">過去{range}日間</span>
           </div>
         </div>
 
-        {/* Top content */}
+        {/* Channel info */}
         <div className="bg-[#202020] border border-[#303030] rounded-xl p-4">
           <p className="text-sm font-medium text-white mb-3">チャンネル情報</p>
           <div className="space-y-3 text-xs text-[#aaaaaa]">
             <div className="flex justify-between">
               <span>総再生数</span>
-              <span className="text-white">{fmt(channel.total_views)}</span>
+              <span className="text-white">{fmt(lifetimeViews)}</span>
             </div>
             <div className="flex justify-between">
               <span>登録者数</span>
-              <span className="text-white">{fmt(channel.subscribers)}</span>
+              <span className="text-white">{fmt(currentSubscribers)}</span>
             </div>
             {channel.handle && (
               <div className="flex justify-between">

@@ -1,16 +1,13 @@
 "use client";
 import { Channel } from "@/types";
+import { getAnalytics, formatK } from "@/lib/analytics";
 
 type Props = { channel: Channel };
-
-const fmt = (n: number) =>
-  n >= 1_000_000 ? (n / 1_000_000).toFixed(1) + "M"
-  : n >= 1_000 ? (n / 1_000).toFixed(1) + "K"
-  : String(n);
 
 export default function DashboardTab({ channel }: Props) {
   const revenues = channel.monthly_revenue ?? [];
   const totalRevenue = revenues.reduce((a, r) => a + r.revenue, 0);
+  const analytics = getAnalytics(channel.youtube_channel_id);
 
   return (
     <div className="p-4 md:p-6 max-w-4xl">
@@ -41,11 +38,11 @@ export default function DashboardTab({ channel }: Props) {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
         <div className="bg-[#202020] border border-[#303030] rounded-xl p-5">
           <p className="text-xs text-[#aaaaaa] mb-2">チャンネル登録者数</p>
-          <p className="text-3xl font-semibold text-[#60a5fa]">{fmt(channel.subscribers)}</p>
+          <p className="text-3xl font-semibold text-[#60a5fa]">{formatK(analytics.subscribers)}</p>
         </div>
         <div className="bg-[#202020] border border-[#303030] rounded-xl p-5">
           <p className="text-xs text-[#aaaaaa] mb-2">総再生回数</p>
-          <p className="text-3xl font-semibold text-[#34d399]">{fmt(channel.total_views)}</p>
+          <p className="text-3xl font-semibold text-[#34d399]">{formatK(analytics.lifetimeViews)}</p>
         </div>
         <div className="bg-[#202020] border border-[#303030] rounded-xl p-5 md:col-span-2">
           <p className="text-xs text-[#aaaaaa] mb-2">2026年 累計収益</p>
