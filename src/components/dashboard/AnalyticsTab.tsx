@@ -1,6 +1,6 @@
 "use client";
-import { useState } from "react";
-import { Channel } from "@/types";
+import { useState, useEffect } from "react";
+import { Channel, YoutubeVideo } from "@/types";
 import LineChart from "./LineChart";
 import { getAnalyticsForRange } from "@/lib/analytics";
 
@@ -28,6 +28,21 @@ const fmt = (n: number) =>
 export default function AnalyticsTab({ channel }: Props) {
   const [subTab, setSubTab] = useState<SubTab>("overview");
   const [range, setRange] = useState(28);
+  const [videos, setVideos] = useState<YoutubeVideo[]>([]);
+  const [videosLoading, setVideosLoading] = useState(false);
+  const [videosError, setVideosError] = useState("");
+
+  useEffect(() => {
+    if (subTab !== "content") return;
+    if (videos.length > 0) return;
+    setVideosLoading(true);
+    setVideosError("");
+    fetch(`/api/youtube/videos?channelId=${channel.youtube_channel_id}`)
+      .then((r) => { if (!r.ok) throw new Error(); return r.json(); })
+      .then((data) => setVideos(data))
+      .catch(() => setVideosError("動画の取得に失敗しました"))
+      .finally(() => setVideosLoading(false));
+  }, [subTab, channel.youtube_channel_id, videos.length]);
 
   const data = getAnalyticsForRange(channel.youtube_channel_id, range);
   const {
@@ -135,9 +150,54 @@ export default function AnalyticsTab({ channel }: Props) {
         )}
 
         {subTab === "content" && (
-          <div className="text-center py-12 text-[#717171]">
-            <p className="text-4xl mb-3">🎬</p>
-            <p>コンテンツ別アナリティクスは「動画」タブでご確認いただけます</p>
+          <div>
+            {videosLoading && (
+              <div className="flex justify-center py-12">
+                <div className="w-6 h-6 border-2 border-[#FF0000] border-t-transparent rounded-full animate-spin" />
+              </div>
+            )}
+            {videosError && (
+              <p className="text-[#FF4444] text-sm text-center py-8">{videosError}</p>
+            )}
+            {!videosLoading && !videosError && videos.length === 0 && (
+              <p className="text-[#717171] text-sm text-center py-12">動画が見つかりません</p>
+            )}
+            {!videosLoading && videos.length > 0 && (
+              <div>
+                {/* Table header */}
+                <div className="grid grid-cols-[1fr_100px_80px_80px] gap-3 px-3 pb-2 text-xs text-[#717171] border-b border-[#303030] mb-1">
+                  <span>動画</span>
+                  <span className="text-right">再生回数</span>
+                  <span className="text-right">高評価</span>
+                  <span className="text-right">公開日</span>
+                </div>
+                <div className="flex flex-col gap-1">
+                  {[...videos]
+                    .sort((a, b) => b.viewCount - a.viewCount)
+                    .map((v) => (
+                      <div
+                        key={v.id}
+                        className="grid grid-cols-[1fr_100px_80px_80px] gap-3 items-center px-3 py-2 rounded-lg hover:bg-[#272727] transition-colors"
+                      >
+                        <div className="flex items-center gap-3 min-w-0">
+                          <img
+                            src={v.thumbnail}
+                            alt={v.title}
+                            className="w-20 rounded flex-shrink-0 object-cover"
+                            style={{ aspectRatio: "16/9", height: "45px" }}
+                          />
+                          <p className="text-sm text-white truncate">{v.title}</p>
+                        </div>
+                        <p className="text-sm font-medium text-[#34d399] text-right">{fmt(v.viewCount)}</p>
+                        <p className="text-sm text-[#60a5fa] text-right">{fmt(v.likeCount)}</p>
+                        <p className="text-xs text-[#717171] text-right">
+                          {new Date(v.publishedAt).toLocaleDateString("ja-JP", { month: "numeric", day: "numeric", year: "2-digit" })}
+                        </p>
+                      </div>
+                    ))}
+                </div>
+              </div>
+            )}
           </div>
         )}
 
