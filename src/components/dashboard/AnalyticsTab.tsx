@@ -46,11 +46,20 @@ export default function AnalyticsTab({ channel }: Props) {
 
   const data = getAnalyticsForRange(channel.youtube_channel_id, range);
   const {
-    viewData, watchData, subData, labels,
-    totalViews, totalWatchHours,
+    viewData: rawViewData, watchData: rawWatchData, subData, labels,
+    totalViews: rawTotalViews, totalWatchHours: rawTotalWatchHours,
     viewGrowthPercent, watchGrowthPercent, subGrowthPercent,
-    currentSubscribers, realtimeViewers, lifetimeViews,
+    realtimeViewers, lifetimeViews,
   } = data;
+
+  // 実データでスケール補正
+  const scaleFactor = channel.total_views > 0 && lifetimeViews > 0
+    ? channel.total_views / lifetimeViews
+    : 1;
+  const totalViews = Math.round(rawTotalViews * scaleFactor);
+  const totalWatchHours = Math.round(rawTotalWatchHours * scaleFactor);
+  const viewData = rawViewData.map((v) => Math.round(v * scaleFactor));
+  const watchData = rawWatchData.map((v) => Math.round(v * scaleFactor));
 
   const channelSeed = channel.youtube_channel_id
     .split("").reduce((a, c) => a + c.charCodeAt(0), 0);
@@ -71,7 +80,7 @@ export default function AnalyticsTab({ channel }: Props) {
   const kpis = [
     { label: "視聴回数", value: fmt(totalViews), growth: Math.round(viewGrowthPercent), data: viewData },
     { label: "総再生時間（時間）", value: fmt(totalWatchHours), growth: Math.round(watchGrowthPercent), data: watchData },
-    { label: "チャンネル登録者", value: fmt(currentSubscribers), growth: Math.round(subGrowthPercent), data: subData },
+    { label: "チャンネル登録者", value: fmt(channel.subscribers), growth: Math.round(subGrowthPercent), data: subData },
   ];
 
   const [activeKpi, setActiveKpi] = useState(0);
@@ -255,7 +264,7 @@ export default function AnalyticsTab({ channel }: Props) {
         {/* Subscribers */}
         <div className="bg-[#202020] border border-[#303030] rounded-xl p-4 mb-3">
           <p className="text-sm font-medium text-white mb-3">登録者数</p>
-          <p className="text-3xl font-semibold text-white mb-1">{fmt(currentSubscribers)}</p>
+          <p className="text-3xl font-semibold text-white mb-1">{fmt(channel.subscribers)}</p>
           <div className={`flex items-center gap-1 text-xs ${subGrowthPercent >= 0 ? "text-[#4ade80]" : "text-[#f87171]"}`}>
             <span>{subGrowthPercent >= 0 ? "↑" : "↓"}</span>
             <span>{Math.abs(Math.round(subGrowthPercent))}%</span>
@@ -269,11 +278,11 @@ export default function AnalyticsTab({ channel }: Props) {
           <div className="space-y-3 text-xs text-[#aaaaaa]">
             <div className="flex justify-between">
               <span>総再生数</span>
-              <span className="text-white">{fmt(lifetimeViews)}</span>
+              <span className="text-white">{fmt(channel.total_views)}</span>
             </div>
             <div className="flex justify-between">
               <span>登録者数</span>
-              <span className="text-white">{fmt(currentSubscribers)}</span>
+              <span className="text-white">{fmt(channel.subscribers)}</span>
             </div>
             {channel.handle && (
               <div className="flex justify-between">
