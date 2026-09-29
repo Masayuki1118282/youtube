@@ -26,6 +26,21 @@ export async function POST(req: NextRequest) {
   return NextResponse.json(data);
 }
 
+export async function PATCH(req: NextRequest) {
+  const { channelId, channel_name, handle, thumbnail_url, subscribers, total_views } = await req.json();
+  if (!channelId) return NextResponse.json({ error: "channelId required" }, { status: 400 });
+
+  const { data, error } = await supabaseAdmin
+    .from("channels")
+    .update({ channel_name, handle, thumbnail_url, subscribers, total_views })
+    .eq("id", channelId)
+    .select()
+    .single();
+
+  if (error) return NextResponse.json({ error: error.message }, { status: 400 });
+  return NextResponse.json(data);
+}
+
 export async function DELETE(req: NextRequest) {
   const { channelId } = await req.json();
   await supabaseAdmin.from("channels").delete().eq("id", channelId);

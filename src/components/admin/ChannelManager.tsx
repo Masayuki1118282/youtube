@@ -24,6 +24,9 @@ export default function ChannelManager({ onToast }: Props) {
   const [revenueValues, setRevenueValues] = useState<Record<number, string>>({});
   const [savingRevenue, setSavingRevenue] = useState(false);
 
+  // Refresh
+  const [refreshingId, setRefreshingId] = useState<string | null>(null);
+
   const load = async () => {
     setLoading(true);
     const [chRes, cuRes] = await Promise.all([
@@ -91,6 +94,45 @@ export default function ChannelManager({ onToast }: Props) {
     });
     onToast("チャンネルを削除しました");
     await load();
+  };
+
+  const handleRefresh = async (ch: ChannelWithProfile) => {
+    setRefreshingId(ch.id);
+    const lookupUrl = ch.handle
+      ? `https://www.youtube.com/${ch.handle}`
+      : `https://www.youtube.com/channel/${ch.youtube_channel_id}`;
+    const fetchRes = await fetch("/api/youtube/channel", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ url: lookupUrl }),
+    });
+    if (!fetchRes.ok) {
+      const data = await fetchRes.json();
+      onToast(`更新エラー: ${data.error}`);
+      setRefreshingId(null);
+      return;
+    }
+    const fresh = await fetchRes.json();
+    const patchRes = await fetch("/api/admin/channels", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        channelId: ch.id,
+        channel_name: fresh.channel_name,
+        handle: fresh.handle,
+        thumbnail_url: fresh.thumbnail_url,
+        subscribers: fresh.subscribers,
+        total_views: fresh.total_views,
+      }),
+    });
+    if (patchRes.ok) {
+      onToast("最新の登録者数・再生数を取得しました");
+      await load();
+    } else {
+      const data = await patchRes.json();
+      onToast(`更新エラー: ${data.error}`);
+    }
+    setRefreshingId(null);
   };
 
   const openRevenue = (ch: ChannelWithProfile) => {
@@ -218,6 +260,13 @@ export default function ChannelManager({ onToast }: Props) {
                   </div>
                 </div>
                 <div className="flex gap-2">
+                  <button
+                    onClick={() => handleRefresh(ch)}
+                    disabled={refreshingId === ch.id}
+                    className="text-xs text-[#4ade80] hover:text-white border border-[#404040] hover:border-[#4ade80] disabled:opacity-50 px-2 py-1 rounded transition-colors"
+                  >
+                    {refreshingId === ch.id ? "更新中..." : "更新"}
+                  </button>
                   <button
                     onClick={() => openRevenue(ch)}
                     className="text-xs text-[#60a5fa] hover:text-white border border-[#404040] hover:border-[#60a5fa] px-2 py-1 rounded transition-colors"
